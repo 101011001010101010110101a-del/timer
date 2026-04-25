@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Timer</title>
+
+<style>
+body {
+    margin: 0;
+    background: black;
+    color: white;
+    font-family: monospace;
+    overflow: hidden;
+}
+
+/* CENTER TIMER */
+#timeDisplay {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 140px;
+    letter-spacing: 6px;
+}
+
+/* STATES */
+.red { color: #ff3b3b; }
+.green { color: #00ff88; }
+</style>
+</head>
+
+<body>
+
+<div id="timeDisplay">0</div>
+
+<script>
+let running = false;
+let ready = false;
+let holdStart = null;
+let startTime = null;
+let interval = null;
+
+const display = document.getElementById("timeDisplay");
+
+/* FORMAT FUNCTION */
+function formatTime(t, showDecimals = false) {
+    let hours = Math.floor(t / 3600);
+    let minutes = Math.floor((t % 3600) / 60);
+    let seconds = t % 60;
+
+    if (showDecimals) {
+        seconds = seconds.toFixed(2);
+    } else {
+        seconds = Math.floor(seconds);
+    }
+
+    if (minutes > 0 || hours > 0) {
+        seconds = seconds.toString().padStart(2, "0");
+    }
+
+    if (hours > 0) {
+        minutes = minutes.toString().padStart(2, "0");
+        return `${hours}:${minutes}:${seconds}`;
+    }
+
+    if (minutes > 0) {
+        return `${minutes}:${seconds}`;
+    }
+
+    return seconds.toString();
+}
+
+/* HOLD SPACE */
+document.addEventListener("keydown", e => {
+    if (e.code !== "Space") return;
+    e.preventDefault();
+
+    if (running) return;
+
+    if (!holdStart) {
+        holdStart = Date.now();
+        display.classList.add("red");
+
+        setTimeout(() => {
+            if (holdStart && !running) {
+                ready = true;
+                display.classList.remove("red");
+                display.classList.add("green");
+            }
+        }, 400);
+    }
+});
+
+/* RELEASE SPACE */
+document.addEventListener("keyup", e => {
+    if (e.code !== "Space") return;
+
+    if (ready) startTimer();
+
+    holdStart = null;
+    ready = false;
+    display.classList.remove("red", "green");
+});
+
+/* STOP TIMER */
+document.addEventListener("keydown", e => {
+    if (e.code === "Space" && running) stopTimer();
+});
+
+/* START */
+function startTimer() {
+    running = true;
+    startTime = Date.now();
+
+    interval = setInterval(() => {
+        let t = ((Date.now() - startTime) / 1000) * 4; // 2x speed
+
+        display.textContent = formatTime(t, false); // no decimals
+    }, 30);
+}
+
+/* STOP */
+function stopTimer() {
+    running = false;
+    clearInterval(interval);
+
+    let time = ((Date.now() - startTime) / 1000) * 4;
+
+    display.textContent = formatTime(time, true); // show hundredths
+}
+</script>
+
+</body>
+</html>
